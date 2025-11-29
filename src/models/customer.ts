@@ -7,13 +7,13 @@ export class Customer {
   @PrimaryGeneratedColumn('uuid')
   id: string = '';
 
-  @Column({ unique: true })
+  @Column('varchar', { unique: true })
   email: string = '';
 
-  @Column()
+  @Column('varchar')
   password: string = '';
 
-  @Column()
+  @Column('varchar')
   name: string = '';
 
   @CreateDateColumn({ name: 'created_at' })

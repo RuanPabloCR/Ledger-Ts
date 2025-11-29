@@ -7,16 +7,16 @@ export class Transaction {
   @PrimaryGeneratedColumn('uuid')
   id: string = '';
 
-  @Column({ name: 'source_account_id' })
+  @Column('uuid', { name: 'source_account_id' })
   sourceAccountId: string = '';
 
-  @Column({ name: 'target_account_id' })
+  @Column('uuid', { name: 'target_account_id' })
   targetAccountId: string = '';
 
   @Column('decimal', { precision: 15, scale: 2 })
   amount: number = 0;
 
-  @Column({ name: 'prev_transaction_id', nullable: true })
+  @Column('uuid', { name: 'prev_transaction_id', nullable: true })
   prevTransactionId?: string | null;
 
   @CreateDateColumn({ name: 'created_at' })

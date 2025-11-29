@@ -9,15 +9,21 @@ export enum AccountType {
   EQUITY = 'EQUITY'
 }
 
+export enum AssetCode{
+  BRL = 'BRL',
+  USD = 'USD',
+  GBP = 'GBP'
+}
+
 @Entity('accounts')
 export class Account {
   @PrimaryGeneratedColumn('uuid')
   id: string = '';
 
-  @Column()
+  @Column('varchar')
   name: string = '';
 
-  @Column({ name: 'owner_id' })
+  @Column('uuid', { name: 'owner_id' })
   ownerId: string = '';
 
   @Column({
@@ -31,10 +37,10 @@ export class Account {
 
   @Column({
     type: 'enum',
-    enum: ['BRL', 'USD', 'GBP'],
-    default: 'BRL'
+    enum: AssetCode,
+    default: AssetCode.BRL,
   })
-  currency: AssetCode = 'BRL';
+  currency: AssetCode = AssetCode.BRL;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date = new Date();
