@@ -1,0 +1,31 @@
+{
+  "name": "ledger-ts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/server.ts",
+    "start": "node dist/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/pg": "^8.15.6",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@fastify/swagger": "^9.6.1",
+    "@scalar/fastify-api-reference": "^1.40.0",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.6.2",
+    "fastify-type-provider-zod": "^6.1.0",
+    "postgres": "^3.4.7",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.27",
+    "zod": "^4.1.12"
+  }
+}
