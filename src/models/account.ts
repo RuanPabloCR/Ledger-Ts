@@ -67,14 +67,14 @@ export class Account {
 
   static schema = z.object({
     name: z.string().min(1),
-    type: z.enum(["ASSET", "LIABILITY", "EQUITY"]),
-    balance: z.number().min(0),
-    currency: z.enum(["BRL", "USD", "GBP"]).default("BRL"),
+    type: z.nativeEnum(AccountType),
+    balance: z.number().min(0).default(0),
+    currency: z.nativeEnum(AssetCode).default(AssetCode.BRL),
   });
 
   static create(data: z.infer<typeof Account.schema> & { ownerId: string }) {
     const account = new Account();
-    Object.assign(account, data);
+    Object.assign(account, { ...data, balance: data.balance || 0 });
     return account;
   }
 }

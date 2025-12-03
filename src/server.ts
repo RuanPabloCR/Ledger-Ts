@@ -7,6 +7,7 @@ import { fastifySwagger } from "@fastify/swagger";
 import ScalarApiReference from "@scalar/fastify-api-reference";
 import { AppDataSource } from './data-source.js';
 import { authRoutes } from './routes/auth.routes.js';
+import { accountRoutes } from './routes/accounts.routes.js';
 
 const app = fastify({logger: true}).withTypeProvider<ZodTypeProvider>();
 
@@ -28,6 +29,7 @@ app.register(ScalarApiReference, {
 app.withTypeProvider<ZodTypeProvider>();
 
 app.register(authRoutes, { prefix: '/api/auth' });
+app.register(accountRoutes, { prefix: '/api/accounts' });
 
 app.get('/', async (request, reply) => {
     return { hello: 'world' };
