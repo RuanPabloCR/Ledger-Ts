@@ -2,17 +2,20 @@ import { Repository } from 'typeorm';
 import { Account, AccountType, AssetCode } from '../models/account.js';
 import { Customer } from '../models/customer.js';
 import { Transaction } from '../models/transaction.js';
+import { LedgerEntry } from '../models/ledgerEntry.js';
 import { AppDataSource } from '../data-source.js';
 
 export class AccountService {
   private accountRepository: Repository<Account>;
   private customerRepository: Repository<Customer>;
   private transactionRepository: Repository<Transaction>;
+  private ledgerEntryRepository: Repository<LedgerEntry>;
 
   constructor() {
     this.accountRepository = AppDataSource.getRepository(Account);
     this.customerRepository = AppDataSource.getRepository(Customer);
     this.transactionRepository = AppDataSource.getRepository(Transaction);
+    this.ledgerEntryRepository = AppDataSource.getRepository(LedgerEntry);
   }
 
   async create(data: {
@@ -32,7 +35,7 @@ export class AccountService {
 
     const account = Account.create({
       ...data,
-      balance: 0,
+      balance: 0n,
     });
 
     await this.accountRepository.save(account);
@@ -98,6 +101,84 @@ export class AccountService {
     };
   }
 
+  async recalculateBalance(accountId: string): Promise<bigint> {
+    const ledgerEntries = await this.ledgerEntryRepository.find({
+      where: { accountId },
+    });
+
+    let totalBalance = 0n;
+    for (const entry of ledgerEntries) {
+      totalBalance += entry.amount;
+    }
+
+    await this.accountRepository.update(accountId, { balance: totalBalance });
+
+    return totalBalance;
+  }
+
+  async getBalanceRealTime(id: string): Promise<{
+    accountId: string;
+    balance: bigint;
+    cachedBalance: bigint;
+    currency: AssetCode;
+    inSync: boolean;
+  }> {
+    const account = await this.findById(id);
+    const realTimeBalance = await this.recalculateBalance(id);
+    
+    return {
+      accountId: account.id,
+      balance: realTimeBalance,
+      cachedBalance: account.balance,
+      currency: account.currency,
+      inSync: realTimeBalance === account.balance,
+    };
+  }
+
+  async getLedgerEntries(
+    accountId: string,
+    filters?: {
+      page?: number;
+      limit?: number;
+    }
+  ): Promise<{
+    accountId: string;
+    entries: LedgerEntry[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+
+    // Verificar se a conta existe kk
+    await this.findById(accountId);
+
+    const page = filters?.page || 1;
+    const limit = Math.min(filters?.limit || 10, 100);
+    const skip = (page - 1) * limit;
+
+    const [entries, total] = await this.ledgerEntryRepository.findAndCount({
+      where: { accountId },
+      relations: ['transaction'],
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      accountId,
+      entries,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   async getTransactions(
     id: string,
     filters?: {
@@ -111,19 +192,22 @@ export class AccountService {
     const limit = Math.min(filters?.limit || 10, 100);
     const skip = (page - 1) * limit;
 
-    const [transactions, total] = await this.transactionRepository.findAndCount(
-      {
-        where: [{ sourceAccountId: id }, { targetAccountId: id }],
-        relations: ['sourceAccount', 'targetAccount'],
-        skip,
-        take: limit,
-        order: { createdAt: 'DESC' },
-      }
-    );
+    const ledgerEntries = await this.ledgerEntryRepository.find({
+      where: { accountId: id },
+      relations: ['transaction'],
+      order: { createdAt: 'DESC' },
+    });
+
+    const uniqueTransactions = Array.from(
+      new Map(ledgerEntries.map(entry => [entry.transaction?.id, entry.transaction])).values()
+    ).filter(t => t !== undefined) as Transaction[];
+
+    const total = uniqueTransactions.length;
+    const paginatedTransactions = uniqueTransactions.slice(skip, skip + limit);
 
     return {
       accountId: account.id,
-      transactions,
+      transactions: paginatedTransactions,
       pagination: {
         page,
         limit,
@@ -153,15 +237,15 @@ export class AccountService {
   async delete(id: string) {
     const account = await this.findById(id);
 
-    if (account.balance > 0) {
+    if (account.balance > 0n) {
       throw new Error('Cannot delete account with positive balance');
     }
 
-    const transactionsCount = await this.transactionRepository.count({
-      where: [{ sourceAccountId: id }, { targetAccountId: id }],
+    const ledgerEntriesCount = await this.ledgerEntryRepository.count({
+      where: { accountId: id },
     });
 
-    if (transactionsCount > 0) {
+    if (ledgerEntriesCount > 0) {
       throw new Error('Cannot delete account with transaction history');
     }
 

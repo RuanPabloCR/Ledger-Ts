@@ -20,15 +20,14 @@ export class Customer {
   createdAt: Date = new Date();
 
   @OneToMany(() => Account, account => account.owner)
-  accounts: Account[] = [];
+  accounts?: Account[];
 
   get props() {
     return {
       id: this.id,
       email: this.email,
-      password: this.password,
       name: this.name,
-      account: this.accounts,
+      createdAt: this.createdAt,
     };
   }
 

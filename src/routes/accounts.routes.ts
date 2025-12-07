@@ -32,7 +32,7 @@ const accountResponseSchema = z.object({
   name: z.string(),
   ownerId: z.string().uuid(),
   type: z.nativeEnum(AccountType),
-  balance: z.number(),
+  balance: z.bigint(),
   currency: z.nativeEnum(AssetCode),
   createdAt: z.date(),
 });
@@ -51,7 +51,7 @@ const accountListResponseSchema = z.object({
 
 const balanceResponseSchema = z.object({
   accountId: z.string().uuid(),
-  balance: z.number(),
+  balance: z.bigint(),
   currency: z.nativeEnum(AssetCode),
 });
 
@@ -59,7 +59,7 @@ const transactionResponseSchema = z.object({
   id: z.string().uuid(),
   sourceAccountId: z.string().uuid(),
   targetAccountId: z.string().uuid(),
-  amount: z.number(),
+  amount: z.bigint(),
   createdAt: z.date(),
 });
 

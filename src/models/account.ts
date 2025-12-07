@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDat
 import { z } from 'zod';
 import { Customer } from './customer.js';
 import { Transaction } from './transaction.js';
+import { LedgerEntry } from './ledgerEntry.js';
 
 export enum AccountType {
   ASSET = 'ASSET',
@@ -32,8 +33,15 @@ export class Account {
   })
   type: AccountType = AccountType.ASSET;
 
-  @Column('decimal', { precision: 15, scale: 2, default: 0 })
-  balance: number = 0;
+  @Column({
+    type: 'bigint',
+    default: '0',
+    transformer: {
+      to: (value: bigint | undefined) => value !== undefined ? value.toString() : '0',
+      from: (value: string) => BigInt(value || '0'),
+    },
+  })
+  balance: bigint = 0n;
 
   @Column({
     type: 'enum',
@@ -48,11 +56,8 @@ export class Account {
   @ManyToOne(() => Customer, customer => customer.accounts)
   owner?: Customer;
 
-  @OneToMany(() => Transaction, transaction => transaction.sourceAccount)
-  outgoingTransactions: Transaction[] = [];
-
-  @OneToMany(() => Transaction, transaction => transaction.targetAccount)
-  incomingTransactions: Transaction[] = [];
+  @OneToMany(() => LedgerEntry, ledgerEntry => ledgerEntry.account)
+  ledger_entries?: LedgerEntry[];
 
   get props() {
     return {
@@ -62,19 +67,30 @@ export class Account {
       type: this.type,
       balance: this.balance,
       currency: this.currency,
+      createdAt: this.createdAt,
     };
   }
 
   static schema = z.object({
     name: z.string().min(1),
     type: z.nativeEnum(AccountType),
-    balance: z.number().min(0).default(0),
+    balance: z.bigint().default(0n),
     currency: z.nativeEnum(AssetCode).default(AssetCode.BRL),
+  });
+
+  static responseSchema = z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    ownerId: z.string().uuid(),
+    type: z.nativeEnum(AccountType),
+    balance: z.bigint(),
+    currency: z.nativeEnum(AssetCode),
+    createdAt: z.date(),
   });
 
   static create(data: z.infer<typeof Account.schema> & { ownerId: string }) {
     const account = new Account();
-    Object.assign(account, { ...data, balance: data.balance || 0 });
+    Object.assign(account, { ...data, balance: data.balance || 0n });
     return account;
   }
 }

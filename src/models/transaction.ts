@@ -1,57 +1,81 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, OneToMany } from 'typeorm';
 import { z } from 'zod';
 import { Account } from './account.js';
+import { LedgerEntry } from './ledgerEntry.js';
+
+export enum ActorType {
+  USER = 'USER',
+  SYSTEM = 'SYSTEM',
+  WEBHOOK = 'WEBHOOK'
+}
 
 @Entity('transactions')
 export class Transaction {
   @PrimaryGeneratedColumn('uuid')
   id: string = '';
 
-  @Column('uuid', { name: 'source_account_id' })
-  sourceAccountId: string = '';
+  @Column('text')
+  description: string = '';
 
-  @Column('uuid', { name: 'target_account_id' })
-  targetAccountId: string = '';
+  @Column('uuid')
+  actorId: string = '';
 
-  @Column('decimal', { precision: 15, scale: 2 })
-  amount: number = 0;
-
-  @Column('uuid', { name: 'prev_transaction_id', nullable: true })
-  prevTransactionId?: string | null;
+  @Column({
+    type: 'enum',
+    enum: ActorType,
+    default: ActorType.USER
+  })
+  actorType: ActorType = ActorType.USER;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date = new Date();
 
-  @ManyToOne(() => Account, account => account.outgoingTransactions)
-  @JoinColumn({ name: 'source_account_id' })
-  sourceAccount?: Account | null;
-
-  @ManyToOne(() => Account, account => account.incomingTransactions)
-  @JoinColumn({ name: 'target_account_id' })
-  targetAccount?: Account | null;
+  @OneToMany(() => LedgerEntry, ledgerEntry => ledgerEntry.transaction, {
+    cascade: true 
+  })
+  ledger_entries?: LedgerEntry[];
 
   get props() {
     return {
       id: this.id,
-      sourceAccountId: this.sourceAccountId,
-      targetAccountId: this.targetAccountId,
-      amount: this.amount,
-      sourceAccount: this.sourceAccount,
-      targetAccount: this.targetAccount,
-      prevTransactionId: this.prevTransactionId,
+      description: this.description,
+      actorId: this.actorId,
+      actorType: this.actorType,
+      createdAt: this.createdAt,
+      ledger_entries: this.ledger_entries,
     };
   }
 
   static schema = z.object({
-    sourceAccountId: z.string().uuid(),
-    targetAccountId: z.string().uuid(),
-    amount: z.number().positive(),
-    prevTransactionId: z.string().uuid().optional(),
+    description: z.string().min(1),
+    actorId: z.string().uuid(),
+    actorType: z.nativeEnum(ActorType).default(ActorType.USER),
+    ledger_entries: z.array(z.object({
+      accountId: z.string().uuid(),
+      amount: z.bigint(),
+    })).min(2),
+  });
+
+  static responseSchema = z.object({
+    id: z.string().uuid(),
+    description: z.string(),
+    actorId: z.string().uuid(),
+    actorType: z.nativeEnum(ActorType),
+    createdAt: z.date(),
+    ledger_entries: z.array(z.object({
+      id: z.string().uuid(),
+      accountId: z.string().uuid(),
+      amount: z.bigint(),
+    })),
   });
 
   static create(data: z.infer<typeof Transaction.schema>) {
     const transaction = new Transaction();
-    Object.assign(transaction, data);
+    Object.assign(transaction, {
+      description: data.description,
+      actorId: data.actorId,
+      actorType: data.actorType,
+    });
     return transaction;
   }
 }
