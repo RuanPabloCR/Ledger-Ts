@@ -19,7 +19,7 @@ export enum AssetCode{
 @Entity('accounts')
 export class Account {
   @PrimaryGeneratedColumn('uuid')
-  id: string = '';
+  id!: string;
 
   @Column('varchar')
   name: string = '';

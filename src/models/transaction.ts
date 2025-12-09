@@ -12,7 +12,7 @@ export enum ActorType {
 @Entity('transactions')
 export class Transaction {
   @PrimaryGeneratedColumn('uuid')
-  id: string = '';
+  id!: string;
 
   @Column('text')
   description: string = '';

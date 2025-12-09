@@ -30,11 +30,12 @@ const errorResponseSchema = z.object({
 });
 
 const authHeaderSchema = z.object({
-  authorization: z.string(),
+  authorization: z.string().optional(),
 });
 
 export async function authRoutes(app: FastifyInstance) {
-  const customerService = new CustomerService();
+  const testDs = (app as any).testDataSource;
+  const customerService = new CustomerService(testDs);
 
   app.post('/register', {
     schema: {

@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Account, AccountType, AssetCode } from '../models/account.js';
 import { Customer } from '../models/customer.js';
 import { Transaction } from '../models/transaction.js';
@@ -11,11 +11,12 @@ export class AccountService {
   private transactionRepository: Repository<Transaction>;
   private ledgerEntryRepository: Repository<LedgerEntry>;
 
-  constructor() {
-    this.accountRepository = AppDataSource.getRepository(Account);
-    this.customerRepository = AppDataSource.getRepository(Customer);
-    this.transactionRepository = AppDataSource.getRepository(Transaction);
-    this.ledgerEntryRepository = AppDataSource.getRepository(LedgerEntry);
+  constructor(dataSource?: DataSource) {
+    const ds = dataSource || AppDataSource;
+    this.accountRepository = ds.getRepository(Account);
+    this.customerRepository = ds.getRepository(Customer);
+    this.transactionRepository = ds.getRepository(Transaction);
+    this.ledgerEntryRepository = ds.getRepository(LedgerEntry);
   }
 
   async create(data: {

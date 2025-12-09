@@ -5,7 +5,7 @@ import { Account } from './account.js';
 @Entity('customers')
 export class Customer {
   @PrimaryGeneratedColumn('uuid')
-  id: string = '';
+  id!: string;
 
   @Column('varchar', { unique: true })
   email: string = '';

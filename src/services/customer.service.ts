@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Customer } from '../models/customer.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -10,8 +10,9 @@ const SALT_ROUNDS = 10;
 export class CustomerService {
   private customerRepository: Repository<Customer>;
 
-  constructor() {
-    this.customerRepository = AppDataSource.getRepository(Customer);
+  constructor(dataSource?: DataSource) {
+    const ds = dataSource || AppDataSource;
+    this.customerRepository = ds.getRepository(Customer);
   }
 
   async register(data: { email: string; password: string; name: string }) {

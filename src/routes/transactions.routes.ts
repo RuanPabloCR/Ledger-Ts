@@ -6,6 +6,7 @@ import { authenticate, AuthenticatedRequest } from '../middlewares/auth.middlewa
 
 const createTransactionSchema = z.object({
   description: z.string().min(1),
+  actorType: z.nativeEnum(ActorType).optional(),
   ledger_entries: z.array(z.object({
     accountId: z.string().uuid(),
     amount: z.string().regex(/^-?\d+$/, 'Amount must be a valid integer string'),
@@ -52,7 +53,8 @@ const errorResponseSchema = z.object({
 });
 
 export async function transactionRoutes(app: FastifyInstance) {
-  const transactionService = new TransactionService();
+  const testDs = (app as any).testDataSource;
+  const transactionService = new TransactionService(testDs);
 
   // Todas as rotas requerem autenticação
   app.addHook('preHandler', authenticate);
@@ -91,7 +93,7 @@ export async function transactionRoutes(app: FastifyInstance) {
           {
             description: data.description,
             actorId: request.user.id,
-            actorType: ActorType.USER,
+            actorType: data.actorType || ActorType.USER,
             ledger_entries: ledgerEntries,
           },
           request.user.id

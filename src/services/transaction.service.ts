@@ -1,18 +1,21 @@
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Transaction, ActorType } from '../models/transaction.js';
 import { LedgerEntry } from '../models/ledgerEntry.js';
 import { Account } from '../models/account.js';
 import { AppDataSource } from '../data-source.js';
 
 export class TransactionService {
+  private dataSource: DataSource;
   private transactionRepository: Repository<Transaction>;
   private ledgerEntryRepository: Repository<LedgerEntry>;
   private accountRepository: Repository<Account>;
 
-  constructor() {
-    this.transactionRepository = AppDataSource.getRepository(Transaction);
-    this.ledgerEntryRepository = AppDataSource.getRepository(LedgerEntry);
-    this.accountRepository = AppDataSource.getRepository(Account);
+  constructor(dataSource?: DataSource) {
+    const ds = dataSource || AppDataSource;
+    this.dataSource = ds;
+    this.transactionRepository = ds.getRepository(Transaction);
+    this.ledgerEntryRepository = ds.getRepository(LedgerEntry);
+    this.accountRepository = ds.getRepository(Account);
   }
 
   async create(
@@ -38,6 +41,7 @@ export class TransactionService {
 
     if (data.ledger_entries.some(entry => entry.amount === 0n)) {
       throw new Error('Ledger entries cannot have zero amount');
+
     }
 
     const accountIds = data.ledger_entries.map(entry => entry.accountId);
@@ -76,7 +80,7 @@ export class TransactionService {
       }
     }
 
-    const queryRunner = AppDataSource.createQueryRunner();
+    const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 

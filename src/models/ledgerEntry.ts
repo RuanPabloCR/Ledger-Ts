@@ -6,7 +6,7 @@ import { Transaction } from './transaction.js';
 @Entity('ledger_entries')
 export class LedgerEntry {
   @PrimaryGeneratedColumn('uuid')
-  id: string = '';
+  id!: string;
 
   @Column('uuid', { name: 'transaction_id' })
   transactionId: string = '';

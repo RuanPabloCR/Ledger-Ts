@@ -73,7 +73,8 @@ const errorResponseSchema = z.object({
 });
 
 export async function accountRoutes(app: FastifyInstance) {
-  const accountService = new AccountService();
+  const testDs = (app as any).testDataSource;
+  const accountService = new AccountService(testDs);
 
   app.addHook('preHandler', authenticate);
 
