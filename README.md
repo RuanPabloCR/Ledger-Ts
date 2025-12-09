@@ -53,11 +53,14 @@ Ledger-Ts/
 │   │   └── ledgerEntry.ts
 │   ├── routes/          # Rotas da API
 │   │   ├── accounts.routes.ts
-│   │   └── auth.routes.ts
+│   │   ├── auth.routes.ts
+│   │   └── transactions.routes.ts
 │   ├── services/        # Lógica de negócio
 │   │   ├── account.service.ts
-│   │   └── customer.service.ts
+│   │   ├── customer.service.ts
+│   │   └── transaction.service.ts
 │   ├── middlewares/     # Middlewares customizados
+│   │   └── auth.middleware.ts
 │   ├── data-source.ts   # Configuração TypeORM
 │   └── server.ts        # Inicialização do servidor
 ├── docker-compose.yml
@@ -79,9 +82,15 @@ Ledger-Ts/
 - `GET /api/accounts` - Listar contas (com filtros)
 - `GET /api/accounts/:id` - Buscar conta por ID
 - `GET /api/accounts/:id/balance` - Consultar saldo
+- `GET /api/accounts/:id/ledger-entries` - Listar lançamentos contábeis da conta
 - `GET /api/accounts/:id/transactions` - Histórico de transações
 - `PUT /api/accounts/:id` - Atualizar conta
-- `DELETE /api/accounts/:id` - Deletar conta
+
+### Transações
+
+- `POST /api/transactions` - Criar transação (dupla entrada)
+- `GET /api/transactions` - Listar transações
+- `GET /api/transactions/:id` - Buscar transação por ID
 
 ## 💡 Modelo de Dados
 

@@ -233,24 +233,4 @@ export class AccountService {
 
     return account;
   }
-
-  async delete(id: string) {
-    const account = await this.findById(id);
-
-    if (account.balance > 0n) {
-      throw new Error('Cannot delete account with positive balance');
-    }
-
-    const ledgerEntriesCount = await this.ledgerEntryRepository.count({
-      where: { accountId: id },
-    });
-
-    if (ledgerEntriesCount > 0) {
-      throw new Error('Cannot delete account with transaction history');
-    }
-
-    await this.accountRepository.remove(account);
-
-    return { message: 'Account deleted successfully' };
-  }
 }

@@ -8,6 +8,7 @@ import ScalarApiReference from "@scalar/fastify-api-reference";
 import { AppDataSource } from './data-source.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { accountRoutes } from './routes/accounts.routes.js';
+import { transactionRoutes } from './routes/transactions.routes.js';
 
 const app = fastify({logger: true}).withTypeProvider<ZodTypeProvider>();
 
@@ -30,6 +31,7 @@ app.withTypeProvider<ZodTypeProvider>();
 
 app.register(authRoutes, { prefix: '/api/auth' });
 app.register(accountRoutes, { prefix: '/api/accounts' });
+app.register(transactionRoutes, { prefix: '/api/transactions' });
 
 app.get('/', async (request, reply) => {
     return { hello: 'world' };
